@@ -1,3 +1,4 @@
+// models/Mentor.js
 const mongoose = require("mongoose");
 
 const mentorSchema = new mongoose.Schema({
@@ -17,7 +18,13 @@ const mentorSchema = new mongoose.Schema({
   rating: { type: Number, default: 0 },
   totalReviews: { type: Number, default: 0 },
   isApproved: { type: Boolean, default: false },
-  documents: [String], // Cloudinary URLs
+  documents: [
+    {
+      filename: String,
+      contentType: String,
+      data: String, // Base64 string
+    },
+  ],
   createdAt: { type: Date, default: Date.now },
 });
 

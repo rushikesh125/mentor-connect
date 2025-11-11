@@ -1,63 +1,65 @@
 const Mentor = require("../models/Mentor");
 const { body, query, validationResult } = require("express-validator");
 
-exports.applyMentor = [
-  body("university").trim().notEmpty().withMessage("University is required"),
-  body("program").trim().notEmpty().withMessage("Program is required"),
-  body("graduationYear")
-    .isInt({ min: 1950, max: 2030 })
-    .withMessage("Valid graduation year required"),
-  body("expertise")
-    .isArray({ min: 1 })
-    .withMessage("At least one expertise required"),
-  body("bio")
-    .trim()
-    .isLength({ min: 50, max: 1000 })
-    .withMessage("Bio must be 50–1000 characters"),
-  body("documents")
-    .optional()
-    .isArray()
-    .withMessage("Documents must be URLs array"),
 
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
+// controllers/mentorController.js
+exports.applyMentor = async (req, res) => {
+  try {
+    console.log("req.body:", req.body);
+    console.log("req.files:", req.files);
+
+    const { university, program, graduationYear, bio } = req.body;
+
+    // Parse expertise
+    let expertise = [];
+    if (req.body.expertise && Array.isArray(req.body.expertise)) {
+      expertise = req.body.expertise;
+    } else if (req.body["expertise[]"]) {
+      expertise = Array.isArray(req.body["expertise[]"])
+        ? req.body["expertise[]"]
+        : [req.body["expertise[]"]];
+    }
+
+    // Convert files to base64
+    const documents = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const base64 = file.buffer.toString("base64");
+        documents.push({
+          filename: file.originalname,
+          contentType: file.mimetype,
+          data: base64,
+        });
+      }
+    }
+
+    // Validation
+    if (!university || !program || !graduationYear || expertise.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Validation failed",
-        errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
+        message: "All fields are required",
       });
     }
-    next();
-  },
 
-  async (req, res) => {
-    try {
-      const existing = await Mentor.findOne({ user: req.user._id });
-      if (existing) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Already applied" });
-      }
+    const mentor = await Mentor.create({
+      user: req.user._id,
+      university,
+      program,
+      graduationYear: parseInt(graduationYear),
+      expertise,
+      bio: bio || "",
+      documents,
+      isApproved: false,
+    });
 
-      const mentor = await Mentor.create({
-        user: req.user._id,
-        university: req.body.university,
-        program: req.body.program,
-        graduationYear: req.body.graduationYear,
-        expertise: req.body.expertise,
-        bio: req.body.bio,
-        documents: req.body.documents || [],
-        isApproved: false,
-      });
+    await mentor.populate("user", "name email");
 
-      res.status(201).json({ success: true, mentor });
-    } catch (err) {
-      res.status(500).json({ success: false, message: err.message });
-    }
-  },
-];
-
+    res.status(201).json({ success: true, mentor });
+  } catch (err) {
+    console.error("Apply error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 exports.getAllMentors = [
   query("university").optional().trim(),
   query("program").optional().trim(),
@@ -214,13 +216,15 @@ exports.setAvailability = [
 
 exports.getMentorApplications = async (req, res) => {
   try {
-    const applications = await Mentor.find({ isApproved: false }).populate(
-      "user",
-      "name email"
-    );
+    // Use isApproved: false (matches your model)
+    const applications = await Mentor.find({ isApproved: false })
+      .populate("user", "name email")
+      .sort({ createdAt: -1 });
+
     res.json({ success: true, applications });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (error) {
+    console.error("Applications error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

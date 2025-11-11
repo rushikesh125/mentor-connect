@@ -1,4 +1,4 @@
-const { Session } = require("../models"); // Safe
+const { Session, User,Mentor } = require("../models"); // Safe
 const { body, validationResult } = require("express-validator");
 
 exports.getAllUsers = async (req, res) => {
@@ -82,6 +82,22 @@ exports.getPlatformMetrics = async (req, res) => {
     res.json({
       success: true,
       metrics: { totalUsers, totalMentors, totalSessions },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+exports.getMetrics = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalSessions = await Session.countDocuments();
+
+    res.json({
+      success: true,
+      totalUsers,
+      totalSessions,
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

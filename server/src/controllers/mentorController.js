@@ -1,4 +1,5 @@
 const Mentor = require("../models/Mentor");
+const User = require("../models/User")
 const { body, query, validationResult } = require("express-validator");
 
 
@@ -232,13 +233,14 @@ exports.approveMentor = async (req, res) => {
   try {
     const mentor = await Mentor.findById(req.params.id);
     if (!mentor) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Application not found" });
+      return res.status(404).json({ success: false, message: "Application not found" });
     }
 
     mentor.isApproved = true;
     await mentor.save();
+
+    // UPDATE USER ROLE TO "mentor"
+    await User.findByIdAndUpdate(mentor.user, { role: "mentor" });
 
     res.json({ success: true, message: "Mentor approved" });
   } catch (err) {

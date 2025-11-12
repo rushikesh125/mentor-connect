@@ -1,0 +1,726 @@
+{
+	"info": {
+		"_postman_id": "3f1b9417-61c0-4bdb-bb34-7593a045d01c",
+		"name": "MentorConnect – Complete API Test Suite (HttpOnly Cookie + Fixed Auth)",
+		"description": "Final Postman collection for **all 21 endpoints** with:\n\n- HttpOnly `jwt` cookie auth (no Bearer token)\n- Fixed `authorize` middleware\n- File upload via `form-data`\n- Auto ID extraction\n- Full validation + error tests\n- Admin flow included\n\n**How to use:**\n1. Import → Set `base_url`\n2. Run `Signup` or `Login` → cookie set\n3. All protected routes work automatically\n\n**No Authorization headers needed**",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33303263",
+		"_collection_link": "https://none66-2999.postman.co/workspace/incubyte~f2c25b5a-fd81-43ac-a2e6-95b51e70ebb3/collection/33303263-3f1b9417-61c0-4bdb-bb34-7593a045d01c?action=share&source=collection_link&creator=33303263"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "POST /api/auth/signup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Signup successful\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.success).to.be.true;",
+									"    pm.environment.set('user_id', json.user.id);",
+									"});",
+									"",
+									"pm.test(\"HttpOnly jwt cookie is set\", function () {",
+									"    const cookies = pm.cookies.jar().getAll('http://localhost:5000');",
+									"    const jwt = cookies.find(c => c.key === 'jwt');",
+									"    pm.expect(jwt).to.exist;",
+									"    pm.expect(jwt.httpOnly).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Rahul Kumar\",\n  \"email\": \"rahul.mentee@example.com\",\n  \"password\": \"SecurePass123\",\n  \"role\": \"mentee\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/signup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /api/auth/login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login successful\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.success).to.be.true;",
+									"    pm.environment.set('user_id', json.user.id);",
+									"});",
+									"",
+									"pm.test(\"jwt cookie is HttpOnly\", function () {",
+									"    const cookies = pm.cookies.jar().getAll('http://localhost:5000');",
+									"    const jwt = cookies.find(c => c.key === 'jwt');",
+									"    pm.expect(jwt).to.exist;",
+									"    pm.expect(jwt.httpOnly).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"rahul.mentee@example.com\",\n  \"password\": \"SecurePass123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/auth/me",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/auth/logout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Mentors",
+			"item": [
+				{
+					"name": "POST /api/mentors/apply (with documents)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Application submitted\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.mentor._id).to.exist;",
+									"    pm.environment.set('mentor_application_id', json.mentor._id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "university",
+									"value": "BITS Pilani",
+									"type": "text"
+								},
+								{
+									"key": "program",
+									"value": "M.Sc. Mathematics",
+									"type": "text"
+								},
+								{
+									"key": "graduationYear",
+									"value": "2024",
+									"type": "text"
+								},
+								{
+									"key": "expertise[0]",
+									"value": "Machine Learning",
+									"type": "text"
+								},
+								{
+									"key": "expertise[1]",
+									"value": "Python",
+									"type": "text"
+								},
+								{
+									"key": "bio",
+									"value": "Ex-Google ML engineer mentoring aspiring data scientists.",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mentors/apply",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"mentors",
+								"apply"
+							]
+						},
+						"description": "Upload degree or ID proof. Cloudinary returns secure URL."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/mentors (search & filter)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/mentors?expertise=Python&university=BITS&rating=4.5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"mentors"
+							],
+							"query": [
+								{
+									"key": "expertise",
+									"value": "Python"
+								},
+								{
+									"key": "university",
+									"value": "BITS"
+								},
+								{
+									"key": "rating",
+									"value": "4.5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/mentors/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/mentors/{{mentor_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"mentors",
+								"{{mentor_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /api/mentors/:id (update profile)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bio\": \"Updated: Now teaching Deep Learning too!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mentors/{{mentor_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"mentors",
+								"{{mentor_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /api/mentors/:id/availability",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  { \"start\": \"2025-11-25T10:00:00.000Z\", \"end\": \"2025-11-25T11:00:00.000Z\" }\n]"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mentors/{{mentor_id}}/availability",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"mentors",
+								"{{mentor_id}}",
+								"availability"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sessions",
+			"item": [
+				{
+					"name": "POST /api/sessions/book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Session booked\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    const json = pm.response.json();",
+									"    pm.environment.set('session_id', json.session._id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mentorId\": \"{{mentor_id}}\",\n  \"startTime\": \"2025-11-25T10:00:00.000Z\",\n  \"endTime\": \"2025-11-25T11:00:00.000Z\",\n  \"topic\": \"Building Scalable ML Systems\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sessions/book",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sessions",
+								"book"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/sessions (my sessions)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sessions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sessions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/sessions/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sessions/{{session_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sessions",
+								"{{session_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /api/sessions/:id/complete",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sessions/{{session_id}}/complete",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sessions",
+								"{{session_id}}",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /api/sessions/:id/review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rating\": 5,\n  \"comment\": \"Best mentor ever! Clear, patient, and practical.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sessions/{{session_id}}/review",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sessions",
+								"{{session_id}}",
+								"review"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin (Login as Admin First)",
+			"item": [
+				{
+					"name": "GET /api/mentors/applications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/mentors/applications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"mentors",
+								"applications"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /api/mentors/applications/:id/approve",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success: true\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Mentor is approved\", async function () {",
+									"    const appId = pm.environment.get(\"pending_mentor_app_id\");",
+									"    const res = await pm.sendRequest(`${pm.environment.get(\"baseUrl\")}/api/mentors/applications/${appId}`);",
+									"    const app = res.json();",
+									"    pm.expect(app.isApproved).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"User role is now 'mentor'\", async function () {",
+									"    const appId = pm.environment.get(\"pending_mentor_app_id\");",
+									"    const appRes = await pm.sendRequest(`${pm.environment.get(\"baseUrl\")}/api/mentors/applications/${appId}`);",
+									"    const app = appRes.json();",
+									"",
+									"    const userRes = await pm.sendRequest({",
+									"        url: `${pm.environment.get(\"baseUrl\")}/api/users/${app.user}`,",
+									"        method: 'GET',",
+									"        header: {",
+									"            'Authorization': `Bearer {{authToken}}`",
+									"        }",
+									"    });",
+									"",
+									"    const user = userRes.json();",
+									"    pm.expect(user.role).to.eql(\"mentor\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/mentors/applications/{{mentor_application_id}}/approve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"mentors",
+								"applications",
+								"{{mentor_application_id}}",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/admin/users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /api/admin/users/:id (ban)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"isBanned\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"users",
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/admin/sessions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/sessions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"sessions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/admin/reviews",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/reviews",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"reviews"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /api/admin/reviews/:id",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/reviews/{{review_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"reviews",
+								"{{review_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/admin/metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/metrics",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"metrics"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "mentor_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "mentor_application_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "session_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "review_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

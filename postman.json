@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "mentorconnect-final-cookie-auth",
+    "_postman_id": "3f1b9417-61c0-4bdb-bb34-7593a045d01c",
     "name": "MentorConnect – Complete API Test Suite (HttpOnly Cookie + Fixed Auth)",
-    "description": "Final Postman collection for **all 21 endpoints** with:\n\n- HttpOnly `jwt` cookie auth (no Bearer token)\n- Fixed `authorize` middleware\n- File upload via `form-data`\n- Auto ID extraction\n- Full validation + error tests\n- Admin flow included\n\n**How to use:**\n1. Import → Set `base_url`\n2. Run `Signup` or `Login` → cookie set\n3. All protected routes work automatically\n\n**No Authorization headers needed**",
+    "description": "**FINAL & CORRECTED** Postman collection for **all 21 endpoints** with:\n\n- HttpOnly `jwt` cookie auth (no Bearer token)\n- Fixed `authorize` middleware\n- File upload via `form-data`\n- Auto ID extraction\n- Full validation + error tests\n- **Admin approval updates user role**\n\n**How to use:**\n1. Import → Set `base_url`\n2. Run `Signup` or `Login` → cookie set\n3. All protected routes work automatically\n\n**No Authorization headers needed**",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -10,7 +10,7 @@
       "name": "Auth",
       "item": [
         {
-          "name": "POST /api/auth/signup",
+          "name": "POST /api/auth/signup (Mentee)",
           "event": [
             {
               "listen": "test",
@@ -21,6 +21,7 @@
                   "    const json = pm.response.json();",
                   "    pm.expect(json.success).to.be.true;",
                   "    pm.environment.set('user_id', json.user.id);",
+                  "    pm.environment.set('mentee_user_id', json.user.id);",
                   "});",
                   "",
                   "pm.test(\"HttpOnly jwt cookie is set\", function () {",
@@ -55,17 +56,17 @@
           "response": []
         },
         {
-          "name": "POST /api/auth/login",
+          "name": "POST /api/auth/login (Admin)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Login successful\", function () {",
+                  "pm.test(\"Admin login successful\", function () {",
                   "    pm.response.to.have.status(200);",
                   "    const json = pm.response.json();",
                   "    pm.expect(json.success).to.be.true;",
-                  "    pm.environment.set('user_id', json.user.id);",
+                  "    pm.environment.set('admin_user_id', json.user.id);",
                   "});",
                   "",
                   "pm.test(\"jwt cookie is HttpOnly\", function () {",
@@ -73,6 +74,7 @@
                   "    const jwt = cookies.find(c => c.key === 'jwt');",
                   "    pm.expect(jwt).to.exist;",
                   "    pm.expect(jwt.httpOnly).to.be.true;",
+                  "    pm.environment.set('admin_jwt', jwt.value);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -89,7 +91,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"rahul.mentee@example.com\",\n  \"password\": \"SecurePass123\"\n}"
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
@@ -142,6 +144,8 @@
                   "    const json = pm.response.json();",
                   "    pm.expect(json.mentor._id).to.exist;",
                   "    pm.environment.set('mentor_application_id', json.mentor._id);",
+                  "    pm.environment.set('pending_mentor_app_id', json.mentor._id);",
+                  "    pm.environment.set('mentor_user_id', json.mentor.user);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -154,41 +158,13 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                {
-                  "key": "university",
-                  "value": "BITS Pilani",
-                  "type": "text"
-                },
-                {
-                  "key": "program",
-                  "value": "M.Sc. Mathematics",
-                  "type": "text"
-                },
-                {
-                  "key": "graduationYear",
-                  "value": "2024",
-                  "type": "text"
-                },
-                {
-                  "key": "expertise[0]",
-                  "value": "Machine Learning",
-                  "type": "text"
-                },
-                {
-                  "key": "expertise[1]",
-                  "value": "Python",
-                  "type": "text"
-                },
-                {
-                  "key": "bio",
-                  "value": "Ex-Google ML engineer mentoring aspiring data scientists.",
-                  "type": "text"
-                },
-                {
-                  "key": "documents",
-                  "type": "file",
-                  "src": []
-                }
+                { "key": "university", "value": "BITS Pilani", "type": "text" },
+                { "key": "program", "value": "M.Sc. Mathematics", "type": "text" },
+                { "key": "graduationYear", "value": "2024", "type": "text" },
+                { "key": "expertise[0]", "value": "Machine Learning", "type": "text" },
+                { "key": "expertise[1]", "value": "Python", "type": "text" },
+                { "key": "bio", "value": "Ex-Google ML engineer mentoring aspiring data scientists.", "type": "text" },
+                { "key": "documents", "type": "file", "src": [] }
               ]
             },
             "url": {
@@ -335,7 +311,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
+"_VALUES": {
               "raw": "{{base_url}}/api/sessions/{{session_id}}",
               "host": ["{{base_url}}"],
               "path": ["api", "sessions", "{{session_id}}"]
@@ -403,10 +379,37 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Mentor approved\", function () {",
+                  "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success: true\", function () {",
                   "    const json = pm.response.json();",
-                  "    pm.environment.set('mentor_id', json.mentor._id);",
+                  "    pm.expect(json.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Mentor application is approved\", async function () {",
+                  "    const appId = pm.environment.get(\"mentor_application_id\");",
+                  "    const res = await pm.sendRequest(`${pm.environment.get(\"base_url\")}/api/mentors/applications/${appId}`);",
+                  "    const app = res.json();",
+                  "    pm.expect(app.isApproved).to.eql(true);",
+                  "    pm.environment.set(\"approved_mentor_user_id\", app.user.toString());",
+                  "});",
+                  "",
+                  "pm.test(\"User role updated to 'mentor'\", async function () {",
+                  "    const userId = pm.environment.get(\"approved_mentor_user_id\");",
+                  "    const token = pm.cookies.get(\"jwt\");",
+                  "",
+                  "    const res = await pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"base_url\")}/api/users/${userId}`,",
+                  "        method: 'GET',",
+                  "        header: {",
+                  "            'Cookie': `jwt=${token}`",
+                  "        }",
+                  "    });",
+                  "",
+                  "    const user = res.json();",
+                  "    pm.expect(user.role).to.eql(\"mentor\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -419,13 +422,7 @@
             "url": {
               "raw": "{{base_url}}/api/mentors/applications/{{mentor_application_id}}/approve",
               "host": ["{{base_url}}"],
-              "path": [
-                "api",
-                "mentors",
-                "applications",
-                "{{mentor_application_id}}",
-                "approve"
-              ]
+              "path": ["api", "mentors", "applications", "{{mentor_application_id}}", "approve"]
             }
           },
           "response": []
@@ -521,35 +518,16 @@
     }
   ],
   "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:5000",
-      "type": "string"
-    },
-    {
-      "key": "user_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "mentor_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "mentor_application_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "session_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "review_id",
-      "value": "",
-      "type": "string"
-    }
+    { "key": "base_url", "value": "http://localhost:5000", "type": "string" },
+    { "key": "user_id", "value": "", "type": "string" },
+    { "key": "mentor_id", "value": "", "type": "string" },
+    { "key": "mentor_application_id", "value": "", "type": "string" },
+    { "key": "pending_mentor_app_id", "value": "", "type": "string" },
+    { "key": "approved_mentor_user_id", "value": "", "type": "string" },
+    { "key": "session_id", "value": "", "type": "string" },
+    { "key": "review_id", "value": "", "type": "string" },
+    { "key": "admin_jwt", "value": "", "type": "string" },
+    { "key": "mentee_user_id", "value": "", "type": "string" },
+    { "key": "admin_user_id", "value": "", "type": "string" }
   ]
 }

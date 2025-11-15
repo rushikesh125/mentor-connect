@@ -1,23 +1,32 @@
-// store/store.js
-import { configureStore } from "@reduxjs/toolkit";
-import { persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
-import authReducer from "./authSlice";
+import { configureStore } from '@reduxjs/toolkit';
+import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import userReducer from './userSlice';
 
+// Persist configuration - only for auth
 const persistConfig = {
-  key: "root",
+  key: 'mentorconnect-auth',
+  version: 1,
   storage,
-  whitelist: ["auth"],
+  whitelist: ['user', 'token', 'isAuthenticated'], // Only persist these fields
 };
 
-const persistedReducer = persistReducer(persistConfig, authReducer);
+// Create persisted reducer
+const persistedUserReducer = persistReducer(persistConfig, userReducer);
 
+// Configure store
 export const store = configureStore({
   reducer: {
-    auth: persistedReducer,
+    user: persistedUserReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false,
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
     }),
+  devTools: process.env.NODE_ENV !== 'production',
 });
+
+// Create persistor
+export const persistor = persistStore(store);

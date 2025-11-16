@@ -34,7 +34,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.get("/",(req,res)=>{
-    return json({messsage:"Hello , Everything is Working Fine "})
+    return res.json({messsage:"Hello , Everything is Working Fine "})
 })
 
 export default app;

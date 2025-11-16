@@ -1,23 +1,19 @@
-const express = require("express");
-const {
-  getAllUsers,
-  updateUser,
-  getAllSessions,
-  getAllReviews,
-  deleteReview,
-  getPlatformMetrics,
-} = require("../controllers/adminController");
-const { protect, authorize } = require("../middleware/auth");
+import express from 'express';
+import {
+  getPendingMentors,
+  approveMentor,
+  rejectMentor,
+  getAnalytics,
+} from '../controllers/adminController.js';
+import { authorize, protect } from '../middlewares/auth.js';
 
-const router = express.Router();
 
-router.use(protect, authorize("admin"));
+const adminRoutes = express.Router();
 
-router.get("/users", getAllUsers);
-router.put("/users/:id", updateUser);
-router.get("/sessions", getAllSessions);
-router.get("/reviews", getAllReviews);
-router.delete("/reviews/:id", deleteReview);
-router.get("/metrics", getPlatformMetrics);
+adminRoutes.use(protect, authorize('admin'));
+adminRoutes.get('/mentors/pending', getPendingMentors);
+adminRoutes.post('/mentors/:id/approve', approveMentor);
+adminRoutes.post('/mentors/:id/reject', rejectMentor);
+adminRoutes.get('/analytics', getAnalytics);
 
-module.exports = router;
+export default adminRoutes;

@@ -1,22 +1,19 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
 const sessionSchema = new mongoose.Schema({
-  mentor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Mentor",
-    required: true,
-  },
-  mentee: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  mentee: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  mentor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   startTime: { type: Date, required: true },
   endTime: { type: Date, required: true },
   topic: { type: String, required: true },
-  videoLink: { type: String },
+  zoomLink: { type: String, required: true },
   status: {
     type: String,
-    enum: ["booked", "completed", "cancelled"],
-    default: "booked",
+    enum: ['scheduled', 'completed', 'cancelled'],
+    default: 'scheduled',
   },
-  createdAt: { type: Date, default: Date.now },
-});
-
-module.exports = mongoose.model("Session", sessionSchema);
+  reviewedByMentee: { type: Boolean, default: false },
+  reviewedByMentor: { type: Boolean, default: false },
+}, { timestamps: true });
+const Session = mongoose.model('Session', sessionSchema);
+export default Session;

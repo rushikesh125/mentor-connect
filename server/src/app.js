@@ -1,45 +1,40 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const cookieParser = require("cookie-parser");
-const { multerErrorHandler } = require("./middleware/upload");
-const { connectDB } = require("./config/db");
+import express from "express"
+import dotenv from "dotenv"
+import cors from "cors"
+import morgan from "morgan"
+import helmet from 'helmet'
+import connectDB from "./config/db.js"
+import authRoutes from "./routes/authRoutes.js"
+import mentorRoutes from "./routes/mentorRoutes.js"
+import bookingRoutes from "./routes/bookingRoutes.js"
+import reviewRoutes from "./routes/reviewRoutes.js"
+import adminRoutes from "./routes/adminRoutes.js"
+
 
 dotenv.config();
 
 const app = express();
 connectDB()
-// Middleware
+
 app.use(cors({
-  origin: 'http://localhost:3000', // specify the exact origin
-  credentials: true                // allow cookies/auth headers
+  origin: 'http://localhost:3000', // Your Next.js app URL
+  credentials: true
 }));
-app.use(cookieParser());
-app.use(express.json());                    // ← PARSES JSON
-app.use(express.urlencoded({ extended: true })); // ← PARSES FormData text
-// app.use(multerErrorHandler);
+app.use(express.json())
+app.use(helmet())
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
 
-// === Mount ALL Routes BEFORE 404 ===
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/files", require("./routes/fileRoutes"));
-app.use("/api/mentors", require("./routes/mentorRoutes"));
-app.use("/api/sessions", require("./routes/sessionRoutes"));
-app.use("/api/admin", require("./routes/adminRoutes"));
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/mentors', mentorRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin', adminRoutes);
 
-// Test Route
-app.get("/", (req, res) => {
-  res.json({ message: "MentorConnect API v1.0 - Running!" });
-});
+app.get("/",(req,res)=>{
+    return json({messsage:"Hello , Everything is Working Fine "})
+})
 
-// === 404 Handler – MUST BE LAST ===
-// app.use("*", (req, res) => {
-//   res.status(404).json({ success: false, message: "Route not found" });
-// });
-
-// Global Error Handler (Optional)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: "Server Error" });
-});
-
-module.exports = app;
+export default app;

@@ -4,7 +4,7 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,22 +13,18 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "bson": "^7.0.0",
-    "cloudinary": "^2.8.0",
-    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "express-validator": "^7.3.0",
-    "gridfs-stream": "^1.1.1",
+    "helmet": "^8.1.0",
+    "ics": "^3.8.1",
+    "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^7.0.0",
     "mongoose": "^8.19.3",
-    "multer": "^2.0.2",
-    "multer-gridfs-storage": "^5.0.2",
-    "multer-storage-cloudinary": "^4.0.0"
+    "morgan": "^1.10.1",
+    "resend": "^6.4.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.11"
   }
 }

@@ -1,24 +1,14 @@
-// config/db.js
-const mongoose = require("mongoose");
-const { GridFSBucket, ObjectId } = require("mongodb");
-
-let gridfsBucket;
-let dbConnection; // Store the database connection
+// src/config/db.js
+import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-
-    dbConnection = conn.connection.db;
-    gridfsBucket = new GridFSBucket(dbConnection, {
-      bucketName: "mentor-documents",
-    });
-    console.log("GridFS initialized for mentor-documents");
-  } catch (err) {
-    console.error("DB Error:", err);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
     process.exit(1);
   }
 };
 
-module.exports = { connectDB, gridfsBucket, dbConnection };
+export default connectDB;

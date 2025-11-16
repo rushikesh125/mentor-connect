@@ -1,54 +1,47 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Name is required"],
-    trim: true,
+  email: { type: String, required: true, unique: true, lowercase: true },
+  password: { type: String, required: true, minlength: 6, select: false },
+  role: { type: String, enum: ['mentee', 'mentor', 'admin'], required: true },
+  isActive: { type: Boolean, default: true },
+  isApproved: { type: Boolean, default: false },
+  profile: {
+    fullName: String,
+    photo: String,
+    bio: String,
+    phone: String,
+    // Mentee
+    targetUniversities: [String],
+    desiredProgram: String,
+    // Mentor
+    university: String,
+    program: String,
+    graduationYear: Number,
+    expertise: [String],
+    studentIdProof: String,
+    availability: [Date],
+    rating: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 },
   },
-  email: {
-    type: String,
-    required: [true, "Email is required"],
-    unique: true,
-    lowercase: true,
-    match: [/^\S+@+\S+\.\S+$/, "Please use a valid email"],
-  },
-  password: {
-    type: String,
-    required: [true, "Password is required"],
-    minlength: 6,
-    select: false,
-  },
-  role: {
-    type: String,
-    enum: ["mentee", "mentor", "admin"],
-    default: "mentee",
-  },
-  profilePhoto: {
-    type: String,
-    default: "",
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
-// Hash password before saving
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
-// Compare password method
-userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.matchPassword = async function (pass) {
+  return await bcrypt.compare(pass, this.password);
 };
 
-module.exports = mongoose.model("User", userSchema);
+userSchema.methods.getSignedJwtToken = function () {
+  return jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE,
+  });
+};
+const User = mongoose.model('User', userSchema);
+export default User;
